@@ -1,0 +1,8 @@
+build/debug/
+build/release/
+
+*.o
+*.so
+*.a
+
+.vscode/
