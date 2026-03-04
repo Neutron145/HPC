@@ -9,5 +9,8 @@ release:
 run:
 	./build/debug/app/HPC
 
+run_release:
+	./build/release/app/HPC
+
 clean:
 	rm -rf build/debug build/release
