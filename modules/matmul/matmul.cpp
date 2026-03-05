@@ -3,6 +3,7 @@
 #include <chrono>
 #include <random>
 #include <iomanip>
+#include <type_traits>
 
 template <typename T>
 extern float launchMatMulKernel(const T* A, const T* B, T* C, int M, int K, int N);
@@ -12,13 +13,24 @@ MatMul<T>::MatMul() { }
 
 template <typename T>
 void MatMul<T>::whoami() {
-    std::cout << "It is lab #0: MatMul\n\n";
+    std::string type_name {"Unknown"};
+    
+    if constexpr (std::is_same_v<T, int>) {
+        type_name = "int";
+    } else if constexpr (std::is_same_v<T, float>) {
+        type_name = "float";
+    } else if constexpr (std::is_same_v<T, double>) {
+        type_name = "double";
+    }
+
+    std::cout << "\n\nIt is lab #0: MatMul\n";
+    std::cout << "Used type: " << type_name << "\n";
 }
 
 template <typename T>
 double MatMul<T>::verifyResult() {
-    double max_error = 0.0;
-    size_t size = this->M * this->N;
+    double max_error { 0.0 };
+    size_t size {this->M * this->N};
 
     for (size_t i = 0; i < size; i++) {
         double diff = std::abs(static_cast<double>(this->host_C[i]) - 
