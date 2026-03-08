@@ -1,9 +1,11 @@
 #include <iostream>
-#include <IModule.h>
 #include <memory>
+#include <filesystem>
 
+#include <IModule.h>
 #include <matmul.h>
 #include <vecsum.h>
+#include <spectogram.h>
 
 using namespace std;
 
@@ -35,7 +37,27 @@ void lab2() {
     currentLab->runExperiment();
 }
 
+void lab3() {
+    std::filesystem::path directory = "./data/wav";
+    std::vector<std::filesystem::path> files;
+
+    for (const auto& file : std::filesystem::directory_iterator(directory)) {
+        if(file.is_regular_file()) {
+            files.push_back(file.path());
+        }
+    }
+
+    for (int i = 0; i < files.size(); i++) {
+        try{
+            std::cout << files[i] << '\n';
+            Audio audio = loadWav(files[i]);
+        } catch (const std::exception& e) {
+            std::cerr << "Error: " << e.what() << "\n";
+        }
+    }
+}
+
 int main() {
-    lab2();
+    lab3();
     return 0;
 }
