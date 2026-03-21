@@ -13,7 +13,4 @@ set(CMAKE_CUDA_ARCHITECTURES "native")
 
 find_package(CUDAToolkit REQUIRED)
 
-# Добавляем app
-add_subdirectory(app)
-add_subdirectory(modules)
-add_subdirectory(core)
+add_subdirectory(src)

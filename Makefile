@@ -7,10 +7,10 @@ release:
 	cmake --build build/release -j$$(nproc)
 
 run:
-	./build/debug/app/HPC
+	./build/debug/src/app/HPC
 
 run_release:
-	./build/release/app/HPC
+	./build/release/src/app/HPC
 
 clean:
 	rm -rf build/debug build/release
