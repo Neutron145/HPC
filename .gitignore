@@ -1,6 +1,8 @@
 build/debug/
 build/release/
 
+data/wav/driving.wav
+
 *.o
 *.so
 *.a

@@ -38,6 +38,8 @@ void lab2() {
 }
 
 void lab3() {
+    std::unique_ptr<IModule> currentLab = std::make_unique<Spectogram>();
+    
     std::filesystem::path directory = "./data/wav";
     std::vector<std::filesystem::path> files;
 
@@ -47,6 +49,14 @@ void lab3() {
         }
     }
 
+    currentLab->whoami();
+    if (auto lab = dynamic_cast<Spectogram*>(currentLab.get())) {
+        lab->filename = files[0];
+    }
+    std::cout << files[0] << '\n';
+    currentLab->runExperiment();
+
+    /*
     for (int i = 0; i < files.size(); i++) {
         try{
             std::cout << files[i] << '\n';
@@ -55,6 +65,9 @@ void lab3() {
             std::cerr << "Error: " << e.what() << "\n";
         }
     }
+    */
+
+
 }
 
 int main() {
