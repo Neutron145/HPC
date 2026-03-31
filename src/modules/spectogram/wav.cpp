@@ -20,7 +20,7 @@ struct WavHeader {
     uint16_t block_align;
     uint16_t bits_per_sample;
 };
-#pragma pop()
+#pragma pack(pop)
 
 std::ostream& operator<<(std::ostream& os, const WavHeader& header) {
     os << "Format: " << header.audio_format
@@ -71,11 +71,11 @@ Audio loadWav(const std::string& filename) {
         throw std::runtime_error("Data not found");
     }
 
-    std::cout << header;
+    //std::cout << header;
 
     int count_samples = subchunk2_size / (header.bits_per_sample / 8);
     std::vector<int16_t> raw_samples(count_samples);
-    file.read(reinterpret_cast<char*>(raw_samples.data()), count_samples);
+    file.read(reinterpret_cast<char*>(raw_samples.data()), count_samples * sizeof(int16_t));
 
     Audio audio;
     audio.sample_rate = header.sample_rate;
