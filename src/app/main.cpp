@@ -50,24 +50,13 @@ void lab3() {
     }
 
     currentLab->whoami();
-    if (auto lab = dynamic_cast<Spectogram*>(currentLab.get())) {
-        lab->filename = files[0];
-    }
-    std::cout << files[0] << '\n';
-    currentLab->runExperiment();
-
-    /*
     for (int i = 0; i < files.size(); i++) {
-        try{
-            std::cout << files[i] << '\n';
-            Audio audio = loadWav(files[i]);
-        } catch (const std::exception& e) {
-            std::cerr << "Error: " << e.what() << "\n";
+        if (auto lab = dynamic_cast<Spectogram*>(currentLab.get())) {
+            lab->filename = files[i];
         }
+        std::cout << files[i] << '\n';
+        currentLab->runExperiment();
     }
-    */
-
-
 }
 
 int main() {

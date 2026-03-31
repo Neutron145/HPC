@@ -7,9 +7,6 @@ class Spectogram : public IModule {
 private:
     Audio signal;
     
-    std::vector<std::vector<float>> results_GPU;
-    std::vector<std::vector<float>> result_GPU;
-    
     int window_size;
     int hop_size;
 

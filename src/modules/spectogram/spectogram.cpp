@@ -19,7 +19,7 @@ std::vector<float> generateSine(float freq, float sample_rate, int n_samples) {
     std::vector<float> samples(n_samples);
     for (int i = 0; i < n_samples; i++) {
         samples[i] = std::sin(2.0f * std::numbers::pi * freq * i / sample_rate);
-        samples[i] += std::sin(2.0f * std::numbers::pi * freq * 10 * i / sample_rate);
+        samples[i] = std::sin(2.0f * std::numbers::pi * freq * 10 * i / sample_rate);
     }
     return samples;
 }
@@ -100,9 +100,9 @@ void Spectogram::whoami() {
 
 void Spectogram::setup() {
     this->signal = loadWav(this->filename);
-    this->hop_size = 256;
-    this->window_size = 512;
-    this->signal.samples = generateSine(1000, 44100, 44100*5);
+    this->hop_size = 128;
+    this->window_size = 256;
+    //this->signal.samples = generateSine(1000, 44100, 44100*5);
 }
 
 
@@ -151,27 +151,35 @@ double Spectogram::runCPU() {
 
 
 double Spectogram::runGPU() {
-    float time = launchSpectogramKernel(this->signal.samples.data(), this->signal.samples.size(), this->window_size, this->hop_size, this->result_GPU);
+    std::vector<std::vector<float>> results_GPU;
+    float time = launchSpectogramKernel(this->signal.samples.data(), this->signal.samples.size(), this->window_size, this->hop_size, results_GPU);
     std::filesystem::path out_path = std::filesystem::path("data/spectogram") 
                                  / (this->filename.stem().string() + "_spectogram_GPU.bmp");
 
-    saveImage(this->result_GPU, out_path.string());
+    saveImage(results_GPU, out_path.string());
     return time;
 }
 
 
 void Spectogram::runExperiment() {
     this->setup();
-    double cpu_time = this->runCPU();
-    double gpu_time = this->runGPU();
-
+    
     std::cout << std::left 
+                << std::setw(16) << "Window size" 
+                << std::setw(16) << "Hop size" 
                 << std::setw(16) << "CPU time, ms" 
                 << std::setw(16) << "GPU time, ms" 
-                << std::setw(10) << "S\n";
+                << std::setw(10) << "S" << "\n";
     std::cout << std::fixed << std::setprecision(3);
-    std::cout << std::left
-                << std::setw(16) << cpu_time
-                << std::setw(16) << gpu_time
-                << std::setw(10) << cpu_time / gpu_time << "\n";
+    for (int i = 0; i < 4; i++) {
+        double gpu_time = this->runGPU();
+        double cpu_time = this->runCPU();
+        std::cout << std::left
+            << std::setw(16) << this->window_size
+            << std::setw(16) << this->hop_size
+            << std::setw(16) << cpu_time
+            << std::setw(16) << gpu_time
+            << std::setw(10) << cpu_time / gpu_time << "\n";
+        this->window_size *= 2;
+    }
 }
