@@ -9,13 +9,17 @@
 
 #include <spectogram.h>
 #include <fftw3.h>
-#include <EasyBMP.h>1
+#include <EasyBMP.h>
+
+
+extern float launchSpectogramKernel(const float* data, int size, int window_size, int hop_size, std::vector<std::vector<float>>& result);
 
 
 std::vector<float> generateSine(float freq, float sample_rate, int n_samples) {
     std::vector<float> samples(n_samples);
     for (int i = 0; i < n_samples; i++) {
         samples[i] = std::sin(2.0f * std::numbers::pi * freq * i / sample_rate);
+        samples[i] += std::sin(2.0f * std::numbers::pi * freq * 10 * i / sample_rate);
     }
     return samples;
 }
@@ -77,18 +81,14 @@ void saveImage(std::vector<std::vector<float>>& results, std::string filename) {
     float min = *std::ranges::min_element(local_mins);
     float max = *std::ranges::max_element(local_maxs);
 
-    std::cout << "min dB: " << min << "\n";
-    std::cout << "max dB: " << max << "\n";
-
-
     for (int i = 0; i < results.size(); i++) {
         for (int j = 0; j < results[0].size(); j++) {
             image.SetPixel(i, results[0].size() - j - 1, colorMap(results[i][j], max, min));
         }
     }
-    
     image.WriteToFile(filename.c_str());
 }
+
 
 Spectogram::Spectogram() { }
 
@@ -100,17 +100,16 @@ void Spectogram::whoami() {
 
 void Spectogram::setup() {
     this->signal = loadWav(this->filename);
-    //this->signal.samples = generateSine(1000, 44100, 44100*5);
-}
-
-
-double Spectogram::runGPU() {
-    return 0;
+    this->hop_size = 256;
+    this->window_size = 512;
+    this->signal.samples = generateSine(1000, 44100, 44100*5);
 }
 
 
 double Spectogram::runCPU() {
-    std::vector<std::span<float>> chunks = makeChunks(this->signal.samples, 512, 256);
+    auto start = std::chrono::high_resolution_clock::now();
+
+    std::vector<std::span<float>> chunks = makeChunks(this->signal.samples, this->window_size, this->hop_size);
     std::vector<std::vector<float>> results_CPU;
 
     int out_size = (chunks[0].size() / 2) + 1;
@@ -135,18 +134,44 @@ double Spectogram::runCPU() {
         results_CPU.push_back(result);
     }  
 
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> duration = end - start;
+    
     fftwf_destroy_plan(plan);
     fftwf_free(fftw_in);
     fftwf_free(fftw_out);
-    std::cout << "samples size: " << this->signal.samples.size() << "\n";
-    saveImage(results_CPU, "test.bmp");
 
-    return 0;
+
+    std::filesystem::path out_path = std::filesystem::path("data/spectogram") 
+                                / (this->filename.stem().string() + "_spectogram_CPU.bmp");
+    saveImage(results_CPU, out_path.string());
+
+    return duration.count();
 }  
+
+
+double Spectogram::runGPU() {
+    float time = launchSpectogramKernel(this->signal.samples.data(), this->signal.samples.size(), this->window_size, this->hop_size, this->result_GPU);
+    std::filesystem::path out_path = std::filesystem::path("data/spectogram") 
+                                 / (this->filename.stem().string() + "_spectogram_GPU.bmp");
+
+    saveImage(this->result_GPU, out_path.string());
+    return time;
+}
+
 
 void Spectogram::runExperiment() {
     this->setup();
-
     double cpu_time = this->runCPU();
     double gpu_time = this->runGPU();
+
+    std::cout << std::left 
+                << std::setw(16) << "CPU time, ms" 
+                << std::setw(16) << "GPU time, ms" 
+                << std::setw(10) << "S\n";
+    std::cout << std::fixed << std::setprecision(3);
+    std::cout << std::left
+                << std::setw(16) << cpu_time
+                << std::setw(16) << gpu_time
+                << std::setw(10) << cpu_time / gpu_time << "\n";
 }
