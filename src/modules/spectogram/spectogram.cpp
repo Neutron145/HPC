@@ -19,7 +19,7 @@ std::vector<float> generateSine(float freq, float sample_rate, int n_samples) {
     std::vector<float> samples(n_samples);
     for (int i = 0; i < n_samples; i++) {
         samples[i] = std::sin(2.0f * std::numbers::pi * freq * i / sample_rate);
-        samples[i] = std::sin(2.0f * std::numbers::pi * freq * 10 * i / sample_rate);
+        samples[i] += std::sin(2.0f * std::numbers::pi * freq * 10 * i / sample_rate);
     }
     return samples;
 }
