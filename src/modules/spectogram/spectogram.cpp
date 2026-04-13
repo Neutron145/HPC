@@ -7,9 +7,10 @@
 #include <numbers>
 #include <algorithm>
 
+#include <array>
 #include <spectogram.h>
 #include <fftw3.h>
-#include <EasyBMP.h>
+#include <image.h>
 
 
 extern float launchSpectogramKernel(const float* data, int size, int window_size, int hop_size, std::vector<std::vector<float>>& result);
@@ -39,54 +40,58 @@ std::vector<std::span<float>> makeChunks(std::span<float> samples,
 }
 
 
-RGBApixel colorMap(float x, float max, float min) {
-    RGBApixel pixel;
+std::array<uint8_t, 3> colorMap(float x, float max, float min) {
     float value = (x - min) / (max - min);
+    uint8_t r, g, b;
 
-    if (value < 0.33) {
-        float local_value = value / 0.33;
-        pixel.Red = 255 * local_value;
-        pixel.Green = 0;
-        pixel.Blue = 0;
+    if (value < 0.33f) {
+        float norm_value = value / 0.33f;
+        r = static_cast<uint8_t>(255 * norm_value); g = 0; b = 0;
     }
-    else if (value < 0.66) {
-        float local_value = (value - 0.33) / 0.33;
-        pixel.Red = 255;
-        pixel.Green = 255 * local_value;
-        pixel.Blue = 0;
+    else if (value < 0.66f) {
+        float norm_value = (value - 0.33f) / 0.33f;
+        r = 255; g = static_cast<uint8_t>(255 * norm_value); b = 0;
     }
     else {
-        float local_value = (value - 0.66) / 0.33;
-        pixel.Red = 255;
-        pixel.Green = 255;
-        pixel.Blue = 255 * local_value;
+        float norm_value = (value - 0.66f) / 0.33f;
+        r = 255; g = 255; b = static_cast<uint8_t>(255 * norm_value);
     }
 
-    pixel.Alpha = 0;
-    return pixel;
+    return std::array<uint8_t, 3>{r, g, b};
 }
 
 
-void saveImage(std::vector<std::vector<float>>& results, std::string filename) {
-    BMP image;
-    image.SetSize(results.size(), results[0].size());
-    
+void saveImage(std::vector<std::vector<float>>& results, const std::string& filename) {
+    int width = static_cast<int>(results.size());
+    int height = static_cast<int>(results[0].size());
+
     //Нормализация
     std::vector<float> local_maxs{};
     std::vector<float> local_mins{};
-    for (int i = 0; i < results.size(); i++) {
+    for (int i = 0; i < width; i++) {
         local_mins.push_back(*std::ranges::min_element(results[i]));
         local_maxs.push_back(*std::ranges::max_element(results[i]));
     }
     float min = *std::ranges::min_element(local_mins);
     float max = *std::ranges::max_element(local_maxs);
 
-    for (int i = 0; i < results.size(); i++) {
-        for (int j = 0; j < results[0].size(); j++) {
-            image.SetPixel(i, results[0].size() - j - 1, colorMap(results[i][j], max, min));
+    Image image;
+    image.width = width;
+    image.height = height;
+    image.num_channels = 3;
+    image.data.resize(3 * width * height);
+
+    for (int i = 0; i < width; i++) {
+        for (int j = 0; j < height; j++) {
+            std::array<uint8_t, 3> rgb = colorMap(results[i][j], max, min);
+            int y = height - j - 1; 
+            image.data[0 * width * height + y * width + i] = rgb[0];
+            image.data[1 * width * height + y * width + i] = rgb[1];
+            image.data[2 * width * height + y * width + i] = rgb[2];
         }
     }
-    image.WriteToFile(filename.c_str());
+
+    save_image(filename, image);
 }
 
 
