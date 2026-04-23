@@ -1,3 +1,3 @@
 add_executable(HPC main.cpp)
 
-target_link_libraries(HPC PRIVATE matmul vecsum spectogram)
+target_link_libraries(HPC PRIVATE matmul vecsum spectogram bilateral)

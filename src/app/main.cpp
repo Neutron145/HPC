@@ -6,6 +6,7 @@
 #include <matmul.h>
 #include <vecsum.h>
 #include <spectogram.h>
+#include <bilateral.h>
 
 using namespace std;
 
@@ -59,7 +60,28 @@ void lab3() {
     }
 }
 
+void lab4() {
+    std::unique_ptr<IModule> currentLab = std::make_unique<Bilateral>();
+    
+    std::filesystem::path directory = "./data/images";
+    std::vector<std::filesystem::path> files;
+
+    for (const auto& file : std::filesystem::directory_iterator(directory)) {
+        if(file.is_regular_file()) {
+            files.push_back(file.path());
+            std::cout << file.path() << '\n';
+        }
+    }
+
+    currentLab->whoami();
+    if (auto lab = dynamic_cast<Bilateral*>(currentLab.get())) {
+        lab->filename = files[1];
+    }
+    std::cout << files[1] << '\n';
+    currentLab->runExperiment();
+}
+
 int main() {
-    lab3();
+    lab4();
     return 0;
 }
