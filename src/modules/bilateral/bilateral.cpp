@@ -6,7 +6,7 @@
 
 extern float launchBilateralKernel(const Image& input, Image& output, float sigma_r, float sigma_d, int pad_size);
 
-constexpr int pad_size = 3;
+constexpr int pad_size = 1;
 
 Image addPadding(const Image& image, int pad_size) {
     Image padded_image;
