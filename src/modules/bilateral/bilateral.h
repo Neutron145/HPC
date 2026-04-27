@@ -13,7 +13,7 @@ private:
     //!< Параметры фильтра
     float sigma_spatial, sigma_range;
     //!< Само изображение
-    Image padded_image;
+    Image original_image;
     //!< Результат на CPU
     Image cpu_result;
     //!< Результат на GPU

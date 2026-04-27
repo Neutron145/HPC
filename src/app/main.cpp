@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <filesystem>
+#include <algorithm>
 
 #include <IModule.h>
 #include <matmul.h>
@@ -66,19 +67,32 @@ void lab4() {
     std::filesystem::path directory = "./data/images";
     std::vector<std::filesystem::path> files;
 
+    currentLab->whoami();
+    std::cout << std::left 
+        << std::setw(16) << "Image size" 
+        << std::setw(16) << "Channels"
+        << std::setw(16) << "CPU time, ms" 
+        << std::setw(16) << "GPU time, ms" 
+        << std::setw(10) << "S" << "\n";
+
+
     for (const auto& file : std::filesystem::directory_iterator(directory)) {
-        if(file.is_regular_file()) {
+        if (file.is_regular_file()) {
             files.push_back(file.path());
-            std::cout << file.path() << '\n';
         }
     }
 
-    currentLab->whoami();
-    if (auto lab = dynamic_cast<Bilateral*>(currentLab.get())) {
-        lab->filename = files[1];
+    std::sort(files.begin(), files.end(), [](const auto& a, const auto& b) {
+        return std::filesystem::file_size(a) > std::filesystem::file_size(b);
+    });
+
+
+    for (const auto& file : files) {
+        if (auto lab = dynamic_cast<Bilateral*>(currentLab.get())) {
+            lab->filename = file;
+        }
+        currentLab->runExperiment();
     }
-    std::cout << files[1] << '\n';
-    currentLab->runExperiment();
 }
 
 int main() {
