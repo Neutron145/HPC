@@ -2,7 +2,7 @@
 #include <EasyBMP.h>
 #include <stdexcept>
 
-Image load_image(const std::string& filename, int num_channels) {
+Image load_image(const std::string& filename) {
     BMP bmp_image;
     Image image;
     
@@ -12,13 +12,18 @@ Image load_image(const std::string& filename, int num_channels) {
 
     image.width = bmp_image.TellWidth();
     image.height = bmp_image.TellHeight();
-    image.num_channels = num_channels;
-    image.data.resize(image.width * image.height * num_channels);
+    if (bmp_image.TellBitDepth() <= 8) {
+        image.num_channels = 1;
+    }
+    else {
+        image.num_channels = 3;
+    }
+    image.data.resize(image.width * image.height * image.num_channels);
 
     for(int i = 0; i < image.width; i++) {
         for(int j = 0; j < image.height; j++) {
             RGBApixel pixel = bmp_image.GetPixel(i, j);
-            if (num_channels == 1) {
+            if (image.num_channels == 1) {
                 uint8_t gray = static_cast<uint8_t>(pixel.Red);
                 image.data[j * image.width + i] = gray;
             } else {

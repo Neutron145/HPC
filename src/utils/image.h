@@ -10,5 +10,5 @@ struct Image {
     std::vector<uint8_t> data; 
 };
 
-Image load_image(const std::string& filename, int num_channels); 
+Image load_image(const std::string& filename); 
 void save_image(const std::string& filename, const Image& image);
